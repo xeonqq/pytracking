@@ -24,7 +24,7 @@ def main():
     parser.add_argument('tracker_name', type=str, help='Name of tracking method.')
     parser.add_argument('tracker_param', type=str, help='Name of parameter file.')
     parser.add_argument('videofile', type=str, help='path to a video file.')
-    parser.add_argument('--optional_box', type=float, default=None, nargs="+", help='optional_box with format x y w h.')
+    parser.add_argument('--optional_box', type=float, default=None, nargs=4, help='optional_box with format x y w h.')
     parser.add_argument('--debug', type=int, default=0, help='Debug level.')
     parser.add_argument('--save_results', dest='save_results', action='store_true', help='Save bounding boxes')
     parser.set_defaults(save_results=False)
