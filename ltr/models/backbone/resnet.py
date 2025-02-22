@@ -2,9 +2,12 @@ import math
 import torch.nn as nn
 from collections import OrderedDict
 import torch.utils.model_zoo as model_zoo
-from torchvision.models.resnet import model_urls
 from .base import Backbone
-
+from torchvision.models import (
+    ResNet18_Weights,
+    ResNet50_Weights,
+    ResNet101_Weights
+)
 
 def conv3x3(in_planes, out_planes, stride=1, dilation=1):
     """3x3 convolution with padding"""
@@ -253,7 +256,8 @@ def resnet18(output_layers=None, pretrained=False, **kwargs):
     model = ResNet(BasicBlock, [2, 2, 2, 2], output_layers, **kwargs)
 
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
+        weights = ResNet18_Weights.IMAGENET1K_V1
+        model.load_state_dict(model_zoo.load_url(weights.url))
     return model
 
 
@@ -270,7 +274,8 @@ def resnet50(output_layers=None, pretrained=False, **kwargs):
 
     model = ResNet(Bottleneck, [3, 4, 6, 3], output_layers, **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet50']))
+        weights = ResNet50_Weights.IMAGENET1K_V1
+        model.load_state_dict(model_zoo.load_url(weights.url))
     return model
 
 
@@ -287,5 +292,6 @@ def resnet101(output_layers=None, pretrained=False, **kwargs):
 
     model = ResNet(Bottleneck, [3, 4, 23, 3], output_layers, **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet101']))
+        weights = ResNet101_Weights.IMAGENET1K_V1
+        model.load_state_dict(model_zoo.load_url(weights.url))
     return model
