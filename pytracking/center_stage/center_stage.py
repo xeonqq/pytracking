@@ -1,38 +1,7 @@
 import cv2
 import argparse
 from super_res import SuperResEngine, Resizer
-
-
-class BBoxSmoother:
-
-    def __init__(self, alpha=0.25):
-        self.alpha = alpha
-        self.prev_x = None
-        self.prev_y = None
-        self.prev_w = None
-        self.prev_h = None
-
-    def apply(self, x, y, w, h):
-        if self.prev_x is None:  # First frame
-            self.prev_x = x
-            self.prev_y = y
-            self.prev_w = w
-            self.prev_h = h
-            return x, y, w, h
-
-        # Apply exponential moving average
-        smoothed_x = self.alpha * x + (1 - self.alpha) * self.prev_x
-        smoothed_y = self.alpha * y + (1 - self.alpha) * self.prev_y
-        smoothed_w = self.alpha * w + (1 - self.alpha) * self.prev_w
-        smoothed_h = self.alpha * h + (1 - self.alpha) * self.prev_h
-
-        # Update previous values
-        self.prev_x = smoothed_x
-        self.prev_y = smoothed_y
-        self.prev_w = smoothed_w
-        self.prev_h = smoothed_h
-
-        return smoothed_x, smoothed_y, smoothed_w, smoothed_h
+from bbox_smoother import BBoxSmoother, BBoxSmootherPt2
 
 
 def clamp(value, min_val, max_val):
@@ -73,6 +42,8 @@ def main():
     orig_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     orig_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = cap.get(cv2.CAP_PROP_FPS)
+    print(f"Frame rate: {fps:.2f} FPS")
+
     aspect_ratio = orig_width / orig_height
 
     # Output video setup (fixed size 200px width)
@@ -86,7 +57,8 @@ def main():
     with open(args.bbox_file, 'r') as f:
         bboxes = [list(map(float, line.strip().split())) for line in f]
 
-    smoother = BBoxSmoother(alpha=args.smooth_alpha)
+    # smoother = BBoxSmoother(alpha=args.smooth_alpha)
+    smoother = BBoxSmootherPt2(tau=args.smooth_alpha, dt=1 / fps)
     frame_count = 0
     while cap.isOpened():
         ret, frame = cap.read()
@@ -97,7 +69,14 @@ def main():
             break
 
         raw_x, raw_y, raw_w, raw_h = bboxes[frame_count]
+
+        # raw_cx = raw_x + raw_w / 2
+        # raw_cy = raw_y + raw_h / 2
+        # cx, cy, w, h = smoother.apply(raw_cx, raw_cy, raw_w, raw_h)
         x, y, w, h = smoother.apply(raw_x, raw_y, raw_w, raw_h)
+        # x = cx - w / 2
+        # y = cy - h / 2
+        # Convert to integer values
         x, y, w, h = int(x), int(y), int(w), int(h)
         frame_count += 1
         print(f"Frame {frame_count}: x={x}, y={y}, w={w}, h={h}")
