@@ -1,5 +1,6 @@
 import argparse
 import matplotlib.pyplot as plt
+from spline_fitter import fit_spline
 
 
 class SecondOrderFilter:
@@ -139,13 +140,12 @@ def read_bounding_boxes(filename):
     return centers
 
 
-def plot_centers(centers, c='blue'):
+def plot_centers(centers, c='blue', label='Centers'):
     if not centers:
         print("No valid bounding boxes found in the file.")
         return
     xs, ys = zip(*centers)
-    plt.scatter(xs, ys, c=c, marker='x')
-    plt.title('Centers of Bounding Boxes')
+    plt.scatter(xs, ys, c=c, marker='x', label=label)
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.grid(True)
@@ -184,9 +184,14 @@ def main():
         smoothed_x, smoothed_y, _, _ = smoother_pt2.apply(cx, cy, 10, 10)
 
         smoothed_centers_pt2.append((smoothed_x, smoothed_y))
+    spline_x, spline_y, t = fit_spline(centers)
     plot_centers(centers)
-    plot_centers(smoothed_centers, c='red')
-    plot_centers(smoothed_centers_pt2, c='cyan')
+    plot_centers(smoothed_centers, c='red', label='Smoothed (EMA)')
+    plot_centers(smoothed_centers_pt2, c='cyan', label='Smoothed (PT2)')
+
+    plt.plot(spline_x(t), spline_y(t), '-', label='Smoothed Spline')
+    plt.title('Centers of Bounding Boxes')
+    plt.legend()
     plt.show()
 
 
